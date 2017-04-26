@@ -63,23 +63,34 @@
       In other cases, this may become prohibitive.  Say we want to change
       a color image to be grayscale.  To run this process in a webworker,
       we'd need to copy the whole image data to the other thread, and copy
-      it back once complete.  The copying process will take some time to
-      accomplish.
+      it back once complete.  The copying process can take some time to
+      accomplish.  This approach is implemented below.  Try clicking an image:
     </p>
-    <p>
-      One possibility would be to break our image data into chunks, and
-      process the chunks independently.  Since the chunks are smaller,
-      the copying will happen faster, so we have less issues with blocking
-      the main thread.  Click on the images below to try this.
-    </p>
-    <strong id="image-chunk-message"></strong>
-    <div id="chunk-image-list">
+    <div id="image-list">
       <img src="/images/ace.jpg" alt="ace.jpg"/>
       <img src="/images/bubble.jpg" alt="bubble.jpg"/>
       <img src="/images/chess.jpg" alt="chess.jpg"/>
       <img src="/images/fern.jpg" alt="fern.jpg" />
       <img src="/images/mobile.jpg" alt="mobile.jpg" />
     </div>
+    <p>
+      One alternative possibility would be to break our image data into chunks, and
+      process the chunks independently.  Since the chunks are smaller,
+      the copying will happen faster, so we have less issues with blocking
+      the main thread. <a href="http://www.htmlgoodies.com/html5/client/using-web-workers-to-improve-performance-of-image-manipulation.html">htmlgoodies</a>
+      details this approach.
+    </p>
+    <p>
+      A second alternative is to use a
+      <a href="https://developer.mozilla.org/en-US/docs/Web/API/Transferable">Transerable</a>
+      to share our data with the worker.  Transferrable objects change
+      ownership rather than copying, so they <strong>belong</strong> to the thread
+      they were transferred to, not the thread they came from.  Transferred
+      buffers are therefore no longer accessible on the original thread.  The
+      data transforms could then be made on the worker thread, and
+      the buffer transferred back to the main thread.  Currently, this
+      works for a limited set of browsers.
+    </p>
 
 
     <script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>

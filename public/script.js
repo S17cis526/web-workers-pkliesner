@@ -66,19 +66,28 @@ $('#permute-in-main').on('click', function(event) {
  * When the calculate-in-web-worker button is clicked,
  * calculcate the permutations in a web worker.
  */
-$('#permutate-in-web-worker').on('click', function(event){
+$('#permute-in-web-worker').on('click', function(event){
   event.preventDefault();
 
   // Perform preparations
   $('#permutation-results').empty();
   $('#permutation-message').text("Calculating in web worker...");
 
-  // TODO: Calculate permutations using a web worker
+  // Calculate permutations using our web worker
+  var worker = new Worker('permutations.js');
+  worker.postMessage($('#n').val());
+  worker.onmessage = function(event){
+    console.log(event);
+    event.data.forEach(function(perm) {
+      $('<li>').text(perm).appendTo('#permutation-results');
+    });
+  }
 })
 
 
-$('#image-chunk-list > img').on('click', function(event){
+$('#image-list > img').on('click', function(event){
   event.preventDefault();
+  var image = this;
   // Create a canvas the same size as the image
   var canvas = document.createElement('canvas');
   canvas.width = this.width;
@@ -88,6 +97,24 @@ $('#image-chunk-list > img').on('click', function(event){
   // Draw the image into it
   ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
   // Get the image pixel data
-  var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  // TODO: Process Data
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // Create the worker thread to tranform the image
+  var worker = new Worker("grayscale.js");
+  // Send the worker the data.
+  worker.postMessage(imageData.data);
+  // When the worker finishes, it will send us the
+  // converted image data back.
+  worker.onmessage = function(event){
+    // The data comes back as an Uint8ClampedArray view
+    // (corresponding to how pixels are stored)
+    // Create an ImageData around the Uint8ClampedArray data
+    var imageData = new ImageData(event.data, canvas.width, canvas.height);
+    //imageData.data = event.data;
+    // Put the imageData into our canvas
+    ctx.putImageData(imageData, 0, 0);
+    // Convert the canvas to a DataURL, and set that
+    // as the source of our image - effectively replacing
+    // the image's old data with our grayscale data.
+    image.src = canvas.toDataURL();
+  };
 })
