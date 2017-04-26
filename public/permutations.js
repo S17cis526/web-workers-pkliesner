@@ -1,6 +1,7 @@
 /** grayscale.js
  * Webworker script for computing permutations of n size.
  */
+
 onmessage = function(event) {
   // Get the permutations using the permutations function
   var perms = permutations(event.data);
